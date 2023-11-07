@@ -11,7 +11,7 @@ root.geometry("200x200")
 cityEntry = ttkbootstrap.Entry(root, font="Helvetic, 20")
 cityEntry.pack(pady=10)
 
-searchButton = ttkbootstrap.Button(root, text="Seach", command=search, bootstyle="warning")
+searchButton = ttkbootstrap.Button(root, text="Search", command=search, bootstyle="warning")
 searchButton.pack(pady=10)
 
 loactionLabel = tkk.Label(root, font="Helvetic, 25")
@@ -31,8 +31,32 @@ def userinput():
     result = getWeather(city)
     if result is None:
         return
+    iconURL, description, temp, city, country = result
+    loactionLabel.configure(text=f"{city},{country}")
+
+    image = Image.open(requests.get(iconURL, stream=True).raw)
+    icon = ImageTk.PhotoImage(image)
+    iconLabel.configure(image=icon)
+    iconLabel.image = icon
+
+    tempLabel.configure(text=f"Temperature: {temp:.2f}°C")
+    descriptionLabelLabel.configure(text=f"Description: {description}")
+
 
 def getWeather(city):
-    APIKEY = ""
+    APIKEY = "14820d48f26f136e2da6ed36da9dc80c"
     URL = f"https://api.openweathermap.org/data/2.5/weather?q={city}lat={lat}&lon={lon}&appid={APIKEY}"
     REQUEST = requests.get(url)
+
+    if REQUEST.status_code == 404:
+        messagebox.showerror("ERROR City Not Found!")
+        return None
+    weather = REQUEST.json()
+    iconId = weather['weather'][0]['icon']
+    temp = weather['main']['temp'] - 273.15
+    description = weather['weather'][0]['description']
+    city = weather['name']
+    country = weather['sys']['country']
+
+    iconURL = f" https://openweathermap.org/img/wn/{iconId}10d@2x.png"
+    return (iconURL, description, temp, city, country)
